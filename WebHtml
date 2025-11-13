@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proyecto Final - Análisis Numérico</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- math.js (para parsing de funciones y derivadas) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.1/math.min.js"></script>
+    <!-- Chart.js (para gráficas) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Estilos personalizados */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .tab-btn.active {
+            border-bottom-color: #3b82f6; /* blue-500 */
+            color: #3b82f6;
+            font-weight: 600;
+        }
+        /* Clases para la tabla de resultados */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        th, td {
+            border: 1px solid #e5e7eb; /* gray-200 */
+            padding: 0.75rem;
+            text-align: left;
+        }
+        th {
+            background-color: #f3f4f6; /* gray-100 */
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-blue-600">Proyecto Final de Análisis Numérico</h1>
+            <p class="text-lg text-gray-600 mt-2">Implementación de métodos numéricos en la web</p>
+        </header>
+
+        <!-- Pestañas de Navegación -->
+        <div class="mb-6 border-b border-gray-200">
+            <nav class="flex flex-wrap -mb-px space-x-6" aria-label="Tabs">
+                <button class="tab-btn active py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-blue-600 hover:border-blue-500 transition-colors" onclick="showTab(event, 'cap1')">
+                    Capítulo 1: Raíces
+                </button>
+                <button class="tab-btn py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-blue-600 hover:border-blue-500 transition-colors" onclick="showTab(event, 'cap2')">
+                    Capítulo 2: Sistemas de Ecuaciones
+                </button>
+                <button class="tab-btn py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-blue-600 hover:border-blue-500 transition-colors" onclick="showTab(event, 'cap3')">
+                    Capítulo 3: Interpolación
+                </button>
+                <button class="tab-btn py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-blue-600 hover:border-blue-500 transition-colors" onclick="showTab(event, 'ayuda')">
+                    Ayuda
+                </button>
+            </nav>
+        </div>
+
+        <!-- Contenido de las Pestañas -->
+
+        <!-- ====================================================== -->
+        <!-- =================== CAPÍTULO 1: RAÍCES ================= -->
+        <!-- ====================================================== -->
+        <div id="cap1" class="tab-content active p-4 bg-white rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-6">Capítulo 1: Búsqueda de Raíces</h2>
+            
+            <!-- Formulario de Entrada -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <!-- Columna de Función y Gráfica -->
+                <div class="md:col-span-2 bg-gray-50 p-6 rounded-lg border">
+                    <div class="mb-4">
+                        <label for="c1-funcion" class="block text-sm font-medium text-gray-700 mb-1">Función f(x)</label>
+                        <input type="text" id="c1-funcion" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Ej: x^3 - x - 2">
+                    </div>
+                    <div class="mb-4">
+                        <label for="c1-derivada" class="block text-sm font-medium text-gray-700 mb-1">Derivada f'(x) (Opcional)</label>
+                        <input type="text" id="c1-derivada" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100" placeholder="Se calculará automáticamente si se deja en blanco" readonly>
+                    </div>
+                    <div class="mb-4">
+                        <h3 class="text-lg font-medium text-gray-800 mb-2">Gráfica de la Función</h3>
+                        <div class="bg-white p-4 rounded-md shadow-inner" style="height: 350px;">
+                            <canvas id="c1-grafica"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna de Métodos -->
+                <div class="md:col-span-1 space-y-6">
+                    <!-- Parámetros Comunes -->
+                    <div class="bg-gray-50 p-6 rounded-lg border">
+                        <h3 class="text-lg font-medium text-gray-800 mb-4 border-b pb-2">Parámetros</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="c1-tol" class="block text-sm font-medium text-gray-700">Tolerancia</label>
+                                <input type="text" id="c1-tol" value="0.00001" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                            </div>
+                            <div>
+                                <label for="c1-iter" class="block text-sm font-medium text-gray-700">Max. Iter.</label>
+                                <input type="number" id="c1-iter" value="100" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Métodos -->
+                    <div class="bg-gray-50 p-6 rounded-lg border">
+                        <h3 class="text-lg font-medium text-gray-800 mb-4 border-b pb-2">Métodos de Intervalo</h3>
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label for="c1-a" class="block text-sm font-medium text-gray-700">Intervalo a</label>
+                                <input type="number" id="c1-a" value="1" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                            </div>
+                            <div>
+                                <label for="c1-b" class="block text-sm font-medium text-gray-700">Intervalo b</label>
+                                <input type="number" id="c1-b" value="2" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                            </div>
+                        </div>
+                        <button id="btn-biseccion" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors">Bisección</button>
+                        <button id="btn-regla-falsa" class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors mt-2">Regla Falsa</button>
+                    </div>
+
+                    <div class="bg-gray-50 p-6 rounded-lg border">
+                        <h3 class="text-lg font-medium text-gray-800 mb-4 border-b pb-2">Métodos Abiertos</h3>
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                             <div>
+                                <label for="c1-x0" class="block text-sm font-medium text-gray-700">Punto x₀</label>
+                                <input type="number" id="c1-x0" value="1" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                            </div>
+                            <div>
+                                <label for="c1-x1" class="block text-sm font-medium text-gray-700">Punto x₁ <span class="text-xs">(Secante)</span></label>
+                                <input type="number" id="c1-x1" value="1.1" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                            </div>
+                        </div>
+                         <div class="mb-4">
+                            <label for="c1-gx" class="block text-sm font-medium text-gray-700">Función g(x) <span class="text-xs">(P. Fijo)</span></label>
+                            <input type="text" id="c1-gx" placeholder="Ej: (x+2)^(1/3)" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                        </div>
+                        <button id="btn-newton" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors">Newton</button>
+                        <button id="btn-secante" class="w-full bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 transition-colors mt-2">Secante</button>
+                        <button id="btn-punto-fijo" class="w-full bg-purple-500 text-white py-2 px-4 rounded-md hover:bg-purple-600 transition-colors mt-2">Punto Fijo</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Área de Resultados y Reporte -->
+            <div class="mt-8">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">Resultados</h3>
+                <div id="c1-mensaje-error" class="hidden p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg" role="alert"></div>
+                <div id="c1-resultados" class="p-6 bg-white rounded-lg border shadow-inner overflow-x-auto">
+                    <p class="text-gray-500">Seleccione un método para ver los resultados.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====================================================== -->
+        <!-- =========== CAPÍTULO 2: SISTEMAS DE ECUACIONES ========= -->
+        <!-- ====================================================== -->
+        <div id="cap2" class="tab-content p-4 bg-white rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-6">Capítulo 2: Sistemas de Ecuaciones Lineales</h2>
+            <p class="text-gray-600 mb-4">Interfaz para los métodos de Jacobi, Gauss-Seidel y SOR.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Columna de Entradas -->
+                <div>
+                    <div class="mb-4">
+                        <label for="c2-tamano" class="block text-sm font-medium text-gray-700">Tamaño de la Matriz (N x N, max 7)</label>
+                        <input type="number" id="c2-tamano" min="2" max="7" value="3" class="mt-1 w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                        <button id="btn-generar-matriz" class="ml-2 bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600">Generar</button>
+                    </div>
+                    
+                    <h3 class="text-lg font-medium text-gray-800 mb-2">Matriz A</h3>
+                    <div id="c2-matriz-a" class="grid grid-cols-3 gap-2 p-4 bg-gray-50 rounded border">
+                        <!-- Ejemplo 3x3 diagonal dominante -->
+                        <input type="number" placeholder="a11" class="w-full px-2 py-1 border border-gray-300 rounded-md" value="4">
+                        <input type="number" placeholder="a12" class="w-full px-2 py-1 border border-gray-300 rounded-md" value="1">
+                        <input type="number" placeholder="a13" class="w-full px-2 py-1 border border-gray-300 rounded-md" value="-1">
+                        <input type="number" placeholder="a21" class="w-full px-2 py-1 border border-gray-300 rounded-md" value="2">
+                        <input type="number" placeholder="a22" class="w-full px-2 py-1 border border-gray-300 rounded-md" value="7">
+                        <input type="number" placeholder="a23" class="w-full px-2 py-1 border border-gray-300 rounded-md" value="1">
+                        <input type="number" placeholder="a31" class="w-full px-2 py-1 border border-gray-300 rounded-md" value="1">
+                        <input type="number" placeholder="a32" class="w-full px-2 py-1 border border-gray-300 rounded-md" value="-3">
+                        <input type="number" placeholder="a33" class="w-full px-2 py-1 border border-gray-300 rounded-md" value="12">
+                    </div>
+
+                    <h3 class="text-lg font-medium text-gray-800 mt-4 mb-2">Vector b</h3>
+                    <div id="c2-vector-b" class="grid grid-cols-3 gap-2 p-4 bg-gray-50 rounded border">
+                         <input type="number" placeholder="b1" class="w-full px-2 py-1 border border-gray-300 rounded-md" value="3">
+                         <input type="number" placeholder="b2" class="w-full px-2 py-1 border border-gray-300 rounded-md" value="19">
+                         <input type="number" placeholder="b3" class="w-full px-2 py-1 border border-gray-300 rounded-md" value="31">
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4 mt-4">
+                        <div>
+                            <label for="c2-tol" class="block text-sm font-medium text-gray-700">Tolerancia</label>
+                            <input type="text" id="c2-tol" value="0.00001" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                        </div>
+                        <div>
+                            <label for="c2-iter" class="block text-sm font-medium text-gray-700">Max. Iter.</label>
+                            <input type="number" id="c2-iter" value="100" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                        </div>
+                        <div>
+                            <label for="c2-omega" class="block text-sm font-medium text-gray-700">Omega (ω) <span class="text-xs">(para SOR)</span></label>
+                            <input type="number" id="c2-omega" value="1.1" step="0.1" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                        </div>
+                    </div>
+                    <div class="mt-4 space-x-2">
+                        <button id="btn-jacobi" class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700">Jacobi</button>
+                        <button id="btn-gauss-seidel" class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700">Gauss-Seidel</button>
+                        <button id="btn-sor" class="bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700">SOR</button>
+                    </div>
+                </div>
+
+                <!-- Columna de Resultados -->
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Resultados</h3>
+                    <div id="c2-mensaje-error" class="hidden p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg" role="alert"></div>
+                    <div id="c2-resultados" class="p-6 bg-white rounded-lg border shadow-inner min-h-[200px] overflow-x-auto">
+                        <p class="text-gray-500">Los resultados de la solución y la tabla de iteraciones aparecerán aquí.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====================================================== -->
+        <!-- ================ CAPÍTULO 3: INTERPOLACIÓN ============== -->
+        <!-- ====================================================== -->
+        <div id="cap3" class="tab-content p-4 bg-white rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-6">Capítulo 3: Interpolación</h2>
+            <p class="text-gray-600 mb-4">Interfaz para Vandermonde, Newton, Lagrange y Splines.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Columna de Entradas (Puntos) -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-800 mb-2">Puntos de Datos (x, y) - (Max 8)</h3>
+                    <div id="c3-puntos-container" class="space-y-2 mb-4">
+                        <!-- Puntos iniciales -->
+                        <div class="flex space-x-2">
+                            <input type="number" placeholder="x₀" class="w-1/2 px-3 py-2 border border-gray-300 rounded-md" value="0">
+                            <input type="number" placeholder="y₀" class="w-1/2 px-3 py-2 border border-gray-300 rounded-md" value="1">
+                        </div>
+                        <div class="flex space-x-2">
+                            <input type="number" placeholder="x₁" class="w-1/2 px-3 py-2 border border-gray-300 rounded-md" value="1">
+                            <input type="number" placeholder="y₁" class="w-1/2 px-3 py-2 border border-gray-300 rounded-md" value="3">
+                        </div>
+                        <div class="flex space-x-2">
+                            <input type="number" placeholder="x₂" class="w-1/2 px-3 py-2 border border-gray-300 rounded-md" value="2">
+                            <input type="number" placeholder="y₂" class="w-1/2 px-3 py-2 border border-gray-300 rounded-md" value="2">
+                        </div>
+                    </div>
+                    <button id="btn-add-punto" class="text-sm bg-green-500 text-white py-1 px-3 rounded-md hover:bg-green-600">+ Añadir Punto</button>
+                    <button id="btn-rem-punto" class="text-sm bg-red-500 text-white py-1 px-3 rounded-md hover:bg-red-600">- Quitar Punto</button>
+
+                    <div class="mt-6 space-y-2">
+                        <button id="btn-vandermonde" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700">Vandermonde</button>
+                        <button id="btn-newton-interp" class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600">Newton (Dif. Divididas)</button>
+                        <button id="btn-lagrange" class="w-full bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-600">Lagrange</button>
+                        <button id="btn-spline-lineal" class="w-full bg-teal-600 text-white py-2 px-4 rounded-md hover:bg-teal-700">Spline Lineal</button>
+                        <button id="btn-spline-cubico" class="w-full bg-gray-400 text-white py-2 px-4 rounded-md" disabled>Spline Cúbico (Próximamente)</button>
+                    </div>
+                </div>
+
+                <!-- Columna de Gráfica y Resultados -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-800 mb-2">Gráfica de Interpolación</h3>
+                    <div class="bg-white p-4 rounded-md shadow-inner border" style="height: 350px;">
+                        <canvas id="c3-grafica"></canvas>
+                    </div>
+
+                    <h3 class="text-xl font-semibold text-gray-700 mt-6 mb-4">Resultados</h3>
+                     <div id="c3-mensaje-error" class="hidden p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg" role="alert"></div>
+                    <div id="c3-resultados" class="p-6 bg-white rounded-lg border shadow-inner min-h-[150px] overflow-x-auto">
+                        <p class="text-gray-500">El polinomio resultante aparecerá aquí.</p>
+                        <!-- Ejemplo: <p class="font-mono">P(x) = 2.5x^2 - 0.5x + 1.0</p> -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====================================================== -->
+        <!-- ====================== AYUDA ========================= -->
+        <!-- ====================================================== -->
+        <div id="ayuda" class="tab-content p-6 bg-white rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Ayuda y Guía de Usuario</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <h3 class="text-lg font-medium text-gray-800">Ingreso de Funciones (Capítulo 1)</h3>
+                    <p class="text-gray-600">La librería `math.js` es utilizada para interpretar las funciones. Asegúrate de usar la sintaxis correcta:</p>
+                    <ul class="list-disc list-inside bg-gray-50 p-4 rounded-md mt-2 text-gray-700">
+                        <li>Multiplicación: Usa `*` (Ej: `3 * x`, no `3x`).</li>
+                        <li>Potencias: Usa `^` (Ej: `x^2` o `pow(x, 2)`).</li>
+                        <li>Trigonométricas: `sin(x)`, `cos(x)`, `tan(x)`.</li>
+                        <li>Exponencial: `exp(x)`.</li>
+                        <li>Logaritmo: `log(x)` (natural), `log10(x)`.</li>
+                        <li>Constantes: `pi`, `e`.</li>
+                        <li>Ejemplo válido: `x^3 - 2 * x^2 + exp(-x)`</li>
+                        <li>Para Punto Fijo, ingrese `g(x)` en su campo (ej. `(x + 2)^(1/3)` si `f(x) = x^3 - x - 2`).</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-medium text-gray-800">Ingreso de Matrices (Capítulo 2)</h3>
+                    <p class="text-gray-600">
+                        1. Selecciona el tamaño de la matriz (ej. 3 para una 3x3) y presiona "Generar".
+                        <br>
+                        2. Rellena los campos de la Matriz A (coeficientes) y el Vector b (términos independientes).
+                        <br>
+                        3. **Importante:** Para Jacobi, Gauss-Seidel y SOR, la matriz `A` debe ser **diagonalmente dominante** para garantizar la convergencia. El programa te dará una advertencia si no lo es.
+                    </p>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-medium text-gray-800">Ingreso de Puntos (Capítulo 3)</h3>
+                    <p class="text-gray-600">
+                        1. Usa los botones "+ Añadir Punto" y "- Quitar Punto" para ajustar el número de puntos (hasta un máximo de 8).
+                        <br>
+                        2. Ingresa las coordenadas `x` e `y` para cada punto.
+                        <br>
+                        3. Para Spline Lineal, los puntos se ordenarán automáticamente por `x` para graficar.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ======================================================
+        // ============== LÓGICA DE PESTAÑAS (TABS) ===============
+        // ======================================================
+        let activeTab = 'cap1';
+        let activeBtn = document.querySelector('.tab-btn.active');
+
+        function showTab(event, tabId) {
+            // Ocultar contenido anterior
+            if (activeTab) {
+                document.getElementById(activeTab).classList.remove('active');
+            }
+            // Quitar clase activa del botón anterior
+            if (activeBtn) {
+                activeBtn.classList.remove('active');
+            }
+
+            // Mostrar nuevo contenido
+            document.getElementById(tabId).classList.add('active');
+            
+            // Marcar nuevo botón como activo
+            activeBtn = event.currentTarget;
+            activeBtn.classList.add('active');
+
+            activeTab = tabId;
+
+            // Inicializar gráficas/componentes si es la primera vez que se ven
+            if (tabId === 'cap1' && !window.c1Chart) {
+                initCap1Chart();
+            }
+            if (tabId === 'cap2' && c2Tamano === 0) { // Solo si no se ha inicializado
+                document.getElementById('btn-generar-matriz').click();
+            }
+             if (tabId === 'cap3' && !window.c3Chart) {
+                initCap3Chart();
+            }
+        }
+
+        // ======================================================
+        // =================== LÓGICA CAPÍTULO 1 ==================
+        // ======================================================
+        
+        let c1Chart;
+
+        // --- Inicialización de la Gráfica C1 ---
+        function initCap1Chart() {
+            const ctx = document.getElementById('c1-grafica').getContext('2d');
+            window.c1Chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: 'f(x)',
+                        data: [], // {x: 1, y: 10}
+                        borderColor: '#3b82f6', // blue-500
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.1,
+                        pointRadius: 0 // No mostrar puntos
+                    },
+                    {
+                        label: 'Raíz',
+                        data: [], // {x: 1.5, y: 0}
+                        borderColor: '#ef4444', // red-500
+                        backgroundColor: '#ef4444',
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        showLine: false,
+                        type: 'scatter'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: {
+                                display: true,
+                                text: 'x'
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'f(x)'
+                            },
+                            grid: {
+                                zeroLineColor: '#888',
+                                zeroLineWidth: 2
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Compilar Función y Derivada ---
+        function compilarFuncion(fnString) {
+            try {
+                const node = math.parse(fnString);
+                return node.compile();
+            } catch (e) {
+                mostrarError('c1-mensaje-error', `Error al parsear función: ${e.message}`);
+                return null;
+            }
+        }
+
+        function compilarDerivada(fnString) {
+            try {
+                const derivNode = math.derivative(fnString, 'x');
+                document.getElementById('c1-derivada').value = derivNode.toString(); // Mostrar derivada
+                return derivNode.compile();
+            } catch (e) {
+                mostrarError('c1-mensaje-error', `Error al calcular derivada: ${e.message}`);
+                return null;
+            }
+        }
+
+        // --- Actualizar Gráfica C1 ---
+        function actualizarGraficaC1(fnCompiled, a, b, raiz = null) {
+            if (!fnCompiled || !window.c1Chart) return;
+
+            a = Number(a);
+            b = Number(b);
+            
+            // Asegurar que a sea menor que b
+            if (a > b) [a, b] = [b, a];
+            
+            // Añadir un margen
+            const rango = (b - a === 0) ? 1 : (b - a); // Evitar rango 0
+            const min = a - rango * 0.5;
+            const max = b + rango * 0.5;
+            const step = (max - min) / 100;
+            
+            const data = [];
+            for (let x = min; x <= max; x += step) {
+                try {
+                    const y = fnCompiled.evaluate({ x: x });
+                    if (isFinite(y)) { // Evitar Infinitos
+                         data.push({ x: x, y: y });
+                    }
+                } catch (e) { /* Ignorar errores de evaluación */ }
+            }
+
+            window.c1Chart.data.datasets[0].data = data;
+            
+            // Limpiar raíz anterior
+            window.c1Chart.data.datasets[1].data = [];
+            
+            if (raiz !== null) {
+                 try {
+                    const yRaiz = fnCompiled.evaluate({ x: raiz });
+                    window.c1Chart.data.datasets[1].data = [{ x: raiz, y: yRaiz }];
+                 } catch (e) {}
+            }
+
+            window.c1Chart.update();
+        }
+
+        // --- Mostrar Errores ---
+        function mostrarError(id, mensaje) {
+            const errorDiv = document.getElementById(id);
+            errorDiv.textContent = mensaje;
+            errorDiv.classList.remove('hidden');
+        }
+        
+        function limpiarError(id) {
+            const errorDiv = document.getElementById(id);
+            if (errorDiv) {
+                errorDiv.classList.add('hidden');
+                errorDiv.textContent = '';
+            }
+        }
+
+        // --- Mostrar Resultados ---
+        function mostrarResultadosC1(titulo, raiz, tablaHtml) {
+            const resultadosDiv = document.getElementById('c1-resultados');
+            let raizHtml = `<p class="text-lg">No se encontró la raíz en las iteraciones dadas.</p>`;
+            if (raiz !== null) {
+                raizHtml = `<p class="text-lg">La raíz aproximada es: <strong class="text-blue-600">${raiz.toFixed(7)}</strong></p>`;
+            }
+            
+            resultadosDiv.innerHTML = `
+                <h4 class="text-xl font-semibold mb-3">${titulo}</h4>
+                ${raizHtml}
+                <div class="max-h-60 overflow-y-auto mt-4">
+                    ${tablaHtml}
+                </div>
+            `;
+        }
+
+        // --- Crear Tabla HTML ---
+        function crearTabla(headers, rows) {
+            let ths = headers.map(h => `<th>${h}</th>`).join('');
+            let trs = rows.map(row => {
+                let tds = row.map(td => `<td>${td}</td>`).join('');
+                return `<tr>${tds}</tr>`;
+            }).join('');
+            return `<table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`;
+        }
+        
+        // --- Formatear Número ---
+        function format(num) {
+            if (Math.abs(num) < 1e-10) return "0.00e+0";
+            return num.toExponential(4);
+        }
+
+        // --- Obtener Parámetros Comunes C1 ---
+        function getParamsC1() {
+            const fnString = document.getElementById('c1-funcion').value;
+            const tol = parseFloat(document.getElementById('c1-tol').value);
+            const maxIter = parseInt(document.getElementById('c1-iter').value);
+            const fn = compilarFuncion(fnString);
+            
+            if (!fnString || isNaN(tol) || isNaN(maxIter)) {
+                 mostrarError('c1-mensaje-error', 'Por favor, complete los campos (Función, Tolerancia, Max. Iter.).');
+                 return null;
+            }
+            if (!fn) return null;
+            
+            return { fnString, fn, tol, maxIter };
+        }
+
+        // --- Implementación: Bisección ---
+        document.getElementById('btn-biseccion').addEventListener('click', () => {
+            limpiarError('c1-mensaje-error');
+            const params = getParamsC1();
+            if (!params) return;
+            const { fn, tol, maxIter } = params;
+
+            let a = parseFloat(document.getElementById('c1-a').value);
+            let b = parseFloat(document.getElementById('c1-b').value);
+
+            if (isNaN(a) || isNaN(b)) {
+                mostrarError('c1-mensaje-error', 'Intervalos "a" y "b" deben ser numéricos.');
+                return;
+            }
+
+            let fa, fb, c, fc, error;
+            let iter = 0;
+            let raizEncontrada = null;
+            const tablaRows = [];
+            const headers = ['Iter', 'a', 'b', 'c', 'f(c)', 'Error Rel.'];
+
+            try {
+                fa = fn.evaluate({ x: a });
+                fb = fn.evaluate({ x: b });
+            } catch (e) {
+                mostrarError('c1-mensaje-error', `Error al evaluar f(a) o f(b): ${e.message}`);
+                return;
+            }
+
+            if (fa * fb >= 0) {
+                mostrarError('c1-mensaje-error', 'El método de bisección requiere f(a) y f(b) con signos opuestos.');
+                actualizarGraficaC1(fn, a, b);
+                return;
+            }
+
+            let c_anterior = a; // Para el error relativo
+
+            while (iter < maxIter) {
+                iter++;
+                c = (a + b) / 2;
+                fc = fn.evaluate({ x: c });
+                error = Math.abs((c - c_anterior) / c);
+
+                tablaRows.push([iter, format(a), format(b), format(c), format(fc), format(error)]);
+
+                if (Math.abs(fc) < tol || error < tol) {
+                    raizEncontrada = c;
+                    break;
+                }
+
+                if (fa * fc < 0) {
+                    b = c;
+                    // fb = fc; // No es necesario para Bisección
+                } else {
+                    a = c;
+                    fa = fc; // fa se actualiza
+                }
+                c_anterior = c;
+            }
+            
+            const tablaHtml = crearTabla(headers, tablaRows);
+            mostrarResultadosC1('Método de Bisección', raizEncontrada, tablaHtml);
+            actualizarGraficaC1(fn, 
+                parseFloat(document.getElementById('c1-a').value), 
+                parseFloat(document.getElementById('c1-b').value),
+                raizEncontrada);
+        });
+        
+        // --- Implementación: Regla Falsa ---
+        document.getElementById('btn-regla-falsa').addEventListener('click', () => {
+            limpiarError('c1-mensaje-error');
+            const params = getParamsC1();
+            if (!params) return;
+            const { fn, tol, maxIter } = params;
+
+            let a = parseFloat(document.getElementById('c1-a').value);
+            let b = parseFloat(document.getElementById('c1-b').value);
+
+            if (isNaN(a) || isNaN(b)) {
+                mostrarError('c1-mensaje-error', 'Intervalos "a" y "b" deben ser numéricos.');
+                return;
+            }
+
+            let fa, fb, c, fc, error;
+            let iter = 0;
+            let raizEncontrada = null;
+            const tablaRows = [];
+            const headers = ['Iter', 'a', 'b', 'c', 'f(c)', 'Error Rel.'];
+
+            try {
+                fa = fn.evaluate({ x: a });
+                fb = fn.evaluate({ x: b });
+            } catch (e) {
+                mostrarError('c1-mensaje-error', `Error al evaluar f(a) o f(b): ${e.message}`);
+                return;
+            }
+
+            if (fa * fb >= 0) {
+                mostrarError('c1-mensaje-error', 'Regla Falsa requiere f(a) y f(b) con signos opuestos.');
+                actualizarGraficaC1(fn, a, b);
+                return;
+            }
+
+            let c_anterior = a;
+
+            while (iter < maxIter) {
+                iter++;
+                
+                // Fórmula de Regla Falsa
+                c = b - (fb * (b - a)) / (fb - fa); 
+                
+                fc = fn.evaluate({ x: c });
+                error = (c === 0) ? 0 : Math.abs((c - c_anterior) / c);
+
+                tablaRows.push([iter, format(a), format(b), format(c), format(fc), format(error)]);
+
+                if (Math.abs(fc) < tol || error < tol) {
+                    raizEncontrada = c;
+                    break;
+                }
+
+                if (fa * fc < 0) {
+                    b = c;
+                    fb = fc;
+                } else {
+                    a = c;
+                    fa = fc;
+                }
+                c_anterior = c;
+            }
+            
+            const tablaHtml = crearTabla(headers, tablaRows);
+            mostrarResultadosC1('Método de Regla Falsa', raizEncontrada, tablaHtml);
+            actualizarGraficaC1(fn, 
+                parseFloat(document.getElementById('c1-a').value), 
+                parseFloat(document.getElementById('c1-b').value),
+                raizEncontrada);
+        });
+        
+        // --- Implementación: Newton ---
+        document.getElementById('btn-newton').addEventListener('click', () => {
+            limpiarError('c1-mensaje-error');
+            const params = getParamsC1();
+            if (!params) return;
+            const { fnString, fn, tol, maxIter } = params;
+            
+            let x0 = parseFloat(document.getElementById('c1-x0').value);
+            if (isNaN(x0)) {
+                mostrarError('c1-mensaje-error', 'Punto inicial x₀ debe ser numérico.');
+                return;
+            }
+
+            const dfn = compilarDerivada(fnString); // Compila derivada
+            if (!dfn) return;
+
+            let xn = x0;
+            let fxn, dfxn, x_nuevo, error;
+            let iter = 0;
+            let raizEncontrada = null;
+            const tablaRows = [];
+            const headers = ['Iter', 'x_n', 'f(x_n)', "f'(x_n)", 'Error Rel.'];
+
+            try {
+                while (iter < maxIter) {
+                    iter++;
+                    fxn = fn.evaluate({ x: xn });
+                    dfxn = dfn.evaluate({ x: xn });
+                    
+                    if (Math.abs(dfxn) < 1e-10) {
+                        mostrarError('c1-mensaje-error', `Derivada cercana a cero (f'(${xn.toExponential(2)}) = ${dfxn.toExponential(2)}). El método falla.`);
+                        break;
+                    }
+                    
+                    x_nuevo = xn - (fxn / dfxn);
+                    error = (x_nuevo === 0) ? 0 : Math.abs((x_nuevo - xn) / x_nuevo);
+
+                    tablaRows.push([iter, format(xn), format(fxn), format(dfxn), format(error)]);
+
+                    if (Math.abs(fxn) < tol || error < tol) {
+                        raizEncontrada = x_nuevo;
+                        break;
+                    }
+                    
+                    xn = x_nuevo;
+                }
+            } catch (e) {
+                 mostrarError('c1-mensaje-error', `Error durante la ejecución de Newton: ${e.message}`);
+                 return;
+            }
+            
+            const tablaHtml = crearTabla(headers, tablaRows);
+            mostrarResultadosC1('Método de Newton', raizEncontrada, tablaHtml);
+            actualizarGraficaC1(fn, x0 - 2, x0 + 2, raizEncontrada);
+        });
+        
+        // --- Implementación: Secante ---
+        document.getElementById('btn-secante').addEventListener('click', () => {
+            limpiarError('c1-mensaje-error');
+            const params = getParamsC1();
+            if (!params) return;
+            const { fn, tol, maxIter } = params;
+            
+            let x0 = parseFloat(document.getElementById('c1-x0').value);
+            let x1 = parseFloat(document.getElementById('c1-x1').value);
+
+            if (isNaN(x0) || isNaN(x1)) {
+                mostrarError('c1-mensaje-error', 'Puntos iniciales x₀ y x₁ deben ser numéricos.');
+                return;
+            }
+            
+            let fx0, fx1, x_nuevo, error;
+            let iter = 0;
+            let raizEncontrada = null;
+            const tablaRows = [];
+            const headers = ['Iter', 'x_i-1', 'x_i', 'f(x_i)', 'Error Rel.'];
+
+            try {
+                 while (iter < maxIter) {
+                    iter++;
+                    fx0 = fn.evaluate({ x: x0 });
+                    fx1 = fn.evaluate({ x: x1 });
+                    
+                    if (Math.abs(fx1 - fx0) < 1e-10) {
+                         mostrarError('c1-mensaje-error', `Diferencia f(x_i) - f(x_i-1) cercana a cero. El método falla.`);
+                        break;
+                    }
+                    
+                    x_nuevo = x1 - (fx1 * (x1 - x0)) / (fx1 - fx0);
+                    error = (x_nuevo === 0) ? 0 : Math.abs((x_nuevo - x1) / x_nuevo);
+
+                    tablaRows.push([iter, format(x0), format(x1), format(fx1), format(error)]);
+
+                    if (Math.abs(fx1) < tol || error < tol) {
+                        raizEncontrada = x_nuevo;
+                        break;
+                    }
+                    
+                    x0 = x1;
+                    x1 = x_nuevo;
+                }
+            } catch (e) {
+                mostrarError('c1-mensaje-error', `Error durante la ejecución de Secante: ${e.message}`);
+                return;
+            }
+
+            const tablaHtml = crearTabla(headers, tablaRows);
+            mostrarResultadosC1('Método de la Secante', raizEncontrada, tablaHtml);
+            actualizarGraficaC1(fn, x0 - 2, x1 + 2, raizEncontrada);
+        });
+        
+        // --- Implementación: Punto Fijo ---
+        document.getElementById('btn-punto-fijo').addEventListener('click', () => {
+            limpiarError('c1-mensaje-error');
+            const params = getParamsC1(); // Obtiene f(x), tol, maxIter
+            if (!params) return;
+            const { fn, tol, maxIter } = params; // fn es f(x), la usaremos para graficar
+
+            let x0 = parseFloat(document.getElementById('c1-x0').value);
+            const gxString = document.getElementById('c1-gx').value;
+
+            if (isNaN(x0)) {
+                mostrarError('c1-mensaje-error', 'Punto inicial x₀ debe ser numérico.');
+                return;
+            }
+            if (!gxString) {
+                mostrarError('c1-mensaje-error', 'Por favor, provea la función g(x) para el método de punto fijo.');
+                return;
+            }
+            
+            const g = compilarFuncion(gxString);
+            if (!g) {
+                 mostrarError('c1-mensaje-error', 'Error al parsear la función g(x).');
+                 return;
+            }
+
+            let xn = x0;
+            let x_nuevo, error;
+            let iter = 0;
+            let raizEncontrada = null;
+            const tablaRows = [];
+            const headers = ['Iter', 'x_i', 'g(x_i)', 'Error Rel.'];
+
+            try {
+                while (iter < maxIter) {
+                    iter++;
+                    x_nuevo = g.evaluate({ x: xn });
+                    error = (x_nuevo === 0) ? 0 : Math.abs((x_nuevo - xn) / x_nuevo);
+
+                    tablaRows.push([iter, format(xn), format(x_nuevo), format(error)]);
+
+                    if (error < tol) {
+                        raizEncontrada = x_nuevo;
+                        break;
+                    }
+                    
+                    xn = x_nuevo;
+                }
+            } catch (e) {
+                mostrarError('c1-mensaje-error', `Error durante la ejecución de Punto Fijo: ${e.message}`);
+                return;
+            }
+
+            const tablaHtml = crearTabla(headers, tablaRows);
+            mostrarResultadosC1('Método de Punto Fijo', raizEncontrada, tablaHtml);
+            // Graficamos f(x) (la función original) y la raíz encontrada
+            actualizarGraficaC1(fn, x0 - 2, x0 + 2, raizEncontrada);
+        });
+        
+        
+        // ======================================================
+        // =================== LÓGICA CAPÍTULO 2 ==================
+        // ======================================================
+        
+        let c2Tamano = 0;
+        
+        function initCap2Matrix(N) {
+            // No regenerar si es el mismo tamaño y ya hay inputs
+            if (N === c2Tamano && document.getElementById('c2-matriz-a').childElementCount > 0) return; 
+            c2Tamano = N;
+            
+            const matA = document.getElementById('c2-matriz-a');
+            const vecB = document.getElementById('c2-vector-b');
+            
+            matA.innerHTML = '';
+            vecB.innerHTML = '';
+            
+            matA.className = `grid gap-2 p-4 bg-gray-50 rounded border grid-cols-${N}`;
+            vecB.className = `grid gap-2 p-4 bg-gray-50 rounded border grid-cols-${N}`;
+            
+            for (let i = 0; i < N; i++) {
+                for (let j = 0; j < N; j++) {
+                    matA.innerHTML += `<input type="number" placeholder="a${i+1}${j+1}" class="w-full px-2 py-1 border border-gray-300 rounded-md">`;
+                }
+                vecB.innerHTML += `<input type="number" placeholder="b${i+1}" class="w-full px-2 py-1 border border-gray-300 rounded-md">`;
+            }
+        }
+        
+        document.getElementById('btn-generar-matriz').addEventListener('click', () => {
+            const N = parseInt(document.getElementById('c2-tamano').value);
+            if (N >= 2 && N <= 7) {
+                initCap2Matrix(N);
+            } else {
+                alert('El tamaño debe estar entre 2 y 7.');
+            }
+        });
+        
+        // --- Helpers C2: Leer Matriz y Vector ---
+        function getMatrixAndVector() {
+            const N = c2Tamano;
+            const inputsA = document.getElementById('c2-matriz-a').getElementsByTagName('input');
+            const inputsB = document.getElementById('c2-vector-b').getElementsByTagName('input');
+            
+            let A = math.zeros(N, N)._data; // Array de arrays
+            let b = math.zeros(N)._data; // Array
+            
+            let allValid = true;
+            for (let i = 0; i < N; i++) {
+                for (let j = 0; j < N; j++) {
+                    const val = parseFloat(inputsA[i * N + j].value);
+                    if (isNaN(val)) allValid = false;
+                    A[i][j] = val;
+                }
+                const valB = parseFloat(inputsB[i].value);
+                if (isNaN(valB)) allValid = false;
+                b[i] = valB;
+            }
+            
+            if (!allValid) {
+                mostrarError('c2-mensaje-error', 'Todos los campos de la Matriz A y el Vector B deben ser números.');
+                return null;
+            }
+            return { A, b, N };
+        }
+        
+        // --- Helper C2: Chequear Dominancia Diagonal ---
+        function checkDiagonalDominance(A, N) {
+            let isDominant = true;
+            for (let i = 0; i < N; i++) {
+                let diag = Math.abs(A[i][i]);
+                let sum = 0;
+                for (let j = 0; j < N; j++) {
+                    if (i !== j) {
+                        sum += Math.abs(A[i][j]);
+                    }
+                }
+                if (diag <= sum) { // Debería ser < para dominancia estricta
+                    isDominant = false;
+                    break;
+                }
+            }
+            if (!isDominant) {
+                mostrarError('c2-mensaje-error', 'Advertencia: La matriz no es estrictamente diagonal dominante. La convergencia no está garantizada.');
+            }
+        }
+        
+        // --- Helper C2: Mostrar Resultados ---
+        function mostrarResultadosC2(titulo, solucion, tablaHtml) {
+            const resultadosDiv = document.getElementById('c2-resultados');
+            let solHtml = `<p class="text-lg">No se encontró solución en las iteraciones dadas.</p>`;
+            
+            if (solucion) {
+                solHtml = `<p class="text-lg font-medium">Solución (x):</p>
+                <div class="font-mono bg-gray-100 p-2 rounded">`;
+                solucion.forEach((val, i) => {
+                    solHtml += `x${i+1} = <strong class="text-blue-600">${val.toFixed(6)}</strong><br>`;
+                });
+                solHtml += `</div>`;
+            }
+
+            resultadosDiv.innerHTML = `
+                <h4 class="text-xl font-semibold mb-3">${titulo}</h4>
+                ${solHtml}
+                <div class="max-h-80 overflow-y-auto mt-4">
+                    ${tablaHtml}
+                </div>
+            `;
+        }
+        
+        // --- Implementación: Jacobi ---
+        document.getElementById('btn-jacobi').addEventListener('click', () => {
+            limpiarError('c2-mensaje-error');
+            const data = getMatrixAndVector();
+            if (!data) return;
+            const { A, b, N } = data;
+            
+            checkDiagonalDominance(A, N); // Advertir si no es dominante
+            
+            const tol = parseFloat(document.getElementById('c2-tol').value);
+            const maxIter = parseInt(document.getElementById('c2-iter').value);
+            
+            let x_old = math.zeros(N)._data;
+            let x_new = math.zeros(N)._data;
+            let iter = 0;
+            let error = Infinity;
+            
+            const tablaRows = [];
+            const headers = ['Iter', ...Array.from({length: N}, (_, i) => `x${i+1}`), 'Error (L∞)'];
+            
+            while (iter < maxIter && error > tol) {
+                iter++;
+                
+                for (let i = 0; i < N; i++) {
+                    let sum = 0;
+                    for (let j = 0; j < N; j++) {
+                        if (i !== j) {
+                            sum += A[i][j] * x_old[j];
+                        }
+                    }
+                    if (A[i][i] === 0) {
+                        mostrarError('c2-mensaje-error', `Elemento A[${i+1}][${i+1}] es cero. El método falla.`);
+                        return;
+                    }
+                    x_new[i] = (b[i] - sum) / A[i][i];
+                }
+                
+                // Calcular error (Norma Infinita)
+                error = 0;
+                for (let i = 0; i < N; i++) {
+                    error = Math.max(error, Math.abs(x_new[i] - x_old[i]));
+                }
+                
+                tablaRows.push([iter, ...x_new.map(format), format(error)]);
+                
+                // Copiar x_new a x_old
+                x_old = [...x_new]; 
+            }
+            
+            const tablaHtml = crearTabla(headers, tablaRows);
+            const solucion = (error <= tol) ? x_new : null;
+            mostrarResultadosC2('Método de Jacobi', solucion, tablaHtml);
+        });
+        
+        // --- Implementación: Gauss-Seidel ---
+        document.getElementById('btn-gauss-seidel').addEventListener('click', () => {
+            limpiarError('c2-mensaje-error');
+            const data = getMatrixAndVector();
+            if (!data) return;
+            const { A, b, N } = data;
+            
+            checkDiagonalDominance(A, N);
+            
+            const tol = parseFloat(document.getElementById('c2-tol').value);
+            const maxIter = parseInt(document.getElementById('c2-iter').value);
+            
+            let x = math.zeros(N)._data; // Solo necesitamos un vector
+            let iter = 0;
+            let error = Infinity;
+            
+            const tablaRows = [];
+            const headers = ['Iter', ...Array.from({length: N}, (_, i) => `x${i+1}`), 'Error (L∞)'];
+
+            while (iter < maxIter && error > tol) {
+                iter++;
+                let x_old = [...x];
+                
+                for (let i = 0; i < N; i++) {
+                    let sum = 0;
+                    for (let j = 0; j < N; j++) {
+                        if (i !== j) {
+                            // Usa el valor nuevo si j < i, o el viejo si j > i
+                            sum += A[i][j] * x[j]; 
+                        }
+                    }
+                     if (A[i][i] === 0) {
+                        mostrarError('c2-mensaje-error', `Elemento A[${i+1}][${i+1}] es cero. El método falla.`);
+                        return;
+                    }
+                    x[i] = (b[i] - sum) / A[i][i]; // Actualiza x[i] inmediatamente
+                }
+                
+                error = 0;
+                for (let i = 0; i < N; i++) {
+                    error = Math.max(error, Math.abs(x[i] - x_old[i]));
+                }
+                
+                tablaRows.push([iter, ...x.map(format), format(error)]);
+            }
+            
+            const tablaHtml = crearTabla(headers, tablaRows);
+            const solucion = (error <= tol) ? x : null;
+            mostrarResultadosC2('Método de Gauss-Seidel', solucion, tablaHtml);
+        });
+        
+        // --- Implementación: SOR ---
+         document.getElementById('btn-sor').addEventListener('click', () => {
+            limpiarError('c2-mensaje-error');
+            const data = getMatrixAndVector();
+            if (!data) return;
+            const { A, b, N } = data;
+            
+            checkDiagonalDominance(A, N);
+            
+            const tol = parseFloat(document.getElementById('c2-tol').value);
+            const maxIter = parseInt(document.getElementById('c2-iter').value);
+            const omega = parseFloat(document.getElementById('c2-omega').value);
+            
+            if (isNaN(omega) || omega <= 0 || omega >= 2) {
+                mostrarError('c2-mensaje-error', 'Omega (ω) debe estar en el intervalo (0, 2).');
+                return;
+            }
+
+            let x = math.zeros(N)._data;
+            let iter = 0;
+            let error = Infinity;
+            
+            const tablaRows = [];
+            const headers = ['Iter', ...Array.from({length: N}, (_, i) => `x${i+1}`), 'Error (L∞)'];
+
+            while (iter < maxIter && error > tol) {
+                iter++;
+                let x_old = [...x];
+                
+                for (let i = 0; i < N; i++) {
+                    let sum = 0;
+                    for (let j = 0; j < N; j++) {
+                        if (i !== j) {
+                            sum += A[i][j] * x[j];
+                        }
+                    }
+                    if (A[i][i] === 0) {
+                        mostrarError('c2-mensaje-error', `Elemento A[${i+1}][${i+1}] es cero. El método falla.`);
+                        return;
+                    }
+                    
+                    // Cálculo de SOR
+                    let gaussSeidelVal = (b[i] - sum) / A[i][i];
+                    x[i] = (1 - omega) * x_old[i] + omega * gaussSeidelVal;
+                }
+                
+                error = 0;
+                for (let i = 0; i < N; i++) {
+                    error = Math.max(error, Math.abs(x[i] - x_old[i]));
+                }
+                
+                tablaRows.push([iter, ...x.map(format), format(error)]);
+            }
+            
+            const tablaHtml = crearTabla(headers, tablaRows);
+            const solucion = (error <= tol) ? x : null;
+            mostrarResultadosC2('Método SOR (Successive Over-Relaxation)', solucion, tablaHtml);
+        });
+        
+        
+        // ======================================================
+        // =================== LÓGICA CAPÍTULO 3 ==================
+        // ======================================================
+        
+        let c3Chart;
+        
+        function initCap3Chart() {
+            const ctx = document.getElementById('c3-grafica').getContext('2d');
+            window.c3Chart = new Chart(ctx, {
+                type: 'scatter', 
+                data: {
+                    datasets: [{
+                        label: 'Puntos de Datos',
+                        data: [], // {x: 1, y: 10}
+                        borderColor: '#ef4444', // red-500
+                        backgroundColor: '#ef4444',
+                        pointRadius: 6,
+                        showLine: false
+                    },
+                    {
+                        label: 'Polinomio Interpolado',
+                        data: [],
+                        borderColor: '#3b82f6', // blue-500
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.1,
+                        pointRadius: 0,
+                        type: 'line' 
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { type: 'linear', position: 'bottom', title: { display: true, text: 'x' } },
+                        y: { type: 'linear', position: 'left', title: { display: true, text: 'y' } }
+                    }
+                }
+            });
+        }
+        
+        // --- C3 Helpers: Get Puntos y Mostrar Resultados ---
+        function getPuntosC3() {
+            const puntoDivs = document.getElementById('c3-puntos-container').children;
+            const puntos = [];
+            let allValid = true;
+            for (let div of puntoDivs) {
+                const inputs = div.getElementsByTagName('input');
+                const x = parseFloat(inputs[0].value);
+                const y = parseFloat(inputs[1].value);
+                if (isNaN(x) || isNaN(y)) {
+                    allValid = false;
+                    break;
+                }
+                puntos.push({ x, y });
+            }
+            if (!allValid) {
+                 mostrarError('c3-mensaje-error', 'Todos los puntos (x, y) deben ser numéricos.');
+                 return null;
+            }
+            // Chequear x duplicados
+            const xSet = new Set(puntos.map(p => p.x));
+            if (xSet.size !== puntos.length) {
+                mostrarError('c3-mensaje-error', 'Los valores de "x" no deben repetirse.');
+                return null;
+            }
+            
+            return puntos;
+        }
+
+        function mostrarResultadosC3(titulo, polinomioStr, polinomioFn, puntos) {
+            const resultadosDiv = document.getElementById('c3-resultados');
+            resultadosDiv.innerHTML = `
+                <h4 class="text-xl font-semibold mb-3">${titulo}</h4>
+                <p class="font-mono text-sm bg-gray-100 p-3 rounded overflow-x-auto">${polinomioStr}</p>
+            `;
+            actualizarGraficaC3(puntos, polinomioFn);
+        }
+        
+        function actualizarGraficaC3(puntos, polinomioFn = null) {
+            if (!window.c3Chart) return;
+
+            // 1. Actualizar Puntos de Datos
+            window.c3Chart.data.datasets[0].data = puntos;
+            
+            // 2. Limpiar polinomio anterior
+            window.c3Chart.data.datasets[1].data = [];
+
+            if (polinomioFn) {
+                // 3. Generar datos para el polinomio
+                const xVals = puntos.map(p => p.x);
+                const minX = Math.min(...xVals);
+                const maxX = Math.max(...xVals);
+                const rango = maxX - minX;
+                
+                const plotMin = minX - rango * 0.1;
+                const plotMax = maxX + rango * 0.1;
+                const step = (plotMax - plotMin) / 100;
+
+                const polyData = [];
+                for (let x = plotMin; x <= plotMax; x += step) {
+                    try {
+                        const y = polinomioFn.evaluate({ x: x });
+                        if (isFinite(y)) {
+                            polyData.push({ x, y });
+                        }
+                    } catch (e) {}
+                }
+                window.c3Chart.data.datasets[1].data = polyData;
+            }
+            
+            window.c3Chart.update();
+        }
+        
+        // --- Añadir/Quitar Puntos ---
+        const puntosContainer = document.getElementById('c3-puntos-container');
+        document.getElementById('btn-add-punto').addEventListener('click', () => {
+            const count = puntosContainer.children.length;
+            if (count < 8) {
+                const div = document.createElement('div');
+                div.className = 'flex space-x-2';
+                div.innerHTML = `
+                    <input type="number" placeholder="x${count}" class="w-1/2 px-3 py-2 border border-gray-300 rounded-md">
+                    <input type="number" placeholder="y${count}" class="w-1/2 px-3 py-2 border border-gray-300 rounded-md">
+                `;
+                puntosContainer.appendChild(div);
+            } else {
+                alert('El máximo es de 8 puntos.');
+            }
+        });
+
+        document.getElementById('btn-rem-punto').addEventListener('click', () => {
+            if (puntosContainer.children.length > 2) { // Dejar al menos 2 puntos
+                puntosContainer.removeChild(puntosContainer.lastChild);
+            }
+        });
+        
+        // --- Implementación: Vandermonde ---
+        document.getElementById('btn-vandermonde').addEventListener('click', () => {
+            limpiarError('c3-mensaje-error');
+            const puntos = getPuntosC3();
+            if (!puntos) return;
+            
+            const N = puntos.length;
+            let V = math.zeros(N, N)._data;
+            let y = math.zeros(N)._data;
+
+            for (let i = 0; i < N; i++) {
+                y[i] = puntos[i].y;
+                for (let j = 0; j < N; j++) {
+                    V[i][j] = Math.pow(puntos[i].x, j);
+                }
+            }
+            
+            try {
+                // Resolver V * c = y para c (coeficientes c = [a0, a1, a2, ...])
+                const c = math.lusolve(V, y)._data.flat(); 
+                
+                let polyStr = "P(x) = ";
+                for(let i = c.length - 1; i >= 0; i--) {
+                    polyStr += `${c[i].toFixed(4)}*x^${i}`;
+                    if (i > 0) polyStr += " + ";
+                }
+                polyStr = polyStr.replace(/\+ -/g, "- ").replace(/\*x\^0/g, "");
+
+                const polyFn = compilarFuncion(polyStr.replace("P(x) = ", ""));
+                mostrarResultadosC3("Método de Vandermonde", polyStr, polyFn, puntos);
+
+            } catch(e) {
+                mostrarError('c3-mensaje-error', `Error al resolver el sistema de Vandermonde: ${e.message}. (La matriz puede ser singular)`);
+            }
+        });
+        
+        // --- Implementación: Newton (Diferencias Divididas) ---
+        document.getElementById('btn-newton-interp').addEventListener('click', () => {
+            limpiarError('c3-mensaje-error');
+            const puntos = getPuntosC3();
+            if (!puntos) return;
+            
+            const N = puntos.length;
+            let x = puntos.map(p => p.x);
+            // Crear la tabla de diferencias divididas
+            let dd = math.zeros(N, N)._data;
+            for(let i=0; i<N; i++) {
+                dd[i][0] = puntos[i].y;
+            }
+
+            for (let j = 1; j < N; j++) {
+                for (let i = 0; i < N - j; i++) {
+                    dd[i][j] = (dd[i+1][j-1] - dd[i][j-1]) / (x[i+j] - x[i]);
+                }
+            }
+
+            // Coeficientes son la primera fila: dd[0][0], dd[0][1], ..., dd[0][N-1]
+            const c = dd[0];
+            
+            let polyStr = "P(x) = ";
+            let termStr = "";
+            for (let i = 0; i < N; i++) {
+                polyStr += `${c[i].toFixed(4)}${termStr}`;
+                termStr += `*(x - ${x[i]})`;
+                if (i < N - 1) polyStr += " + ";
+            }
+            polyStr = polyStr.replace(/\+ -/g, "- ");
+
+            const polyFn = compilarFuncion(polyStr.replace("P(x) = ", ""));
+            mostrarResultadosC3("Método de Newton (Dif. Divididas)", polyStr, polyFn, puntos);
+        });
+        
+        // --- Implementación: Lagrange ---
+        document.getElementById('btn-lagrange').addEventListener('click', () => {
+             limpiarError('c3-mensaje-error');
+            const puntos = getPuntosC3();
+            if (!puntos) return;
+            
+            const N = puntos.length;
+            let x = puntos.map(p => p.x);
+            let y = puntos.map(p => p.y);
+            
+            let polyStr = "P(x) = ";
+            
+            for (let j = 0; j < N; j++) {
+                let termStr = `${y[j]}`;
+                for (let i = 0; i < N; i++) {
+                    if (i !== j) {
+                        termStr += ` * (x - ${x[i]}) / (${x[j]} - ${x[i]})`;
+                    }
+                }
+                polyStr += termStr;
+                if (j < N - 1) polyStr += " + ";
+            }
+            polyStr = polyStr.replace(/\+ -/g, "- ");
+
+            const polyFn = compilarFuncion(polyStr.replace("P(x) = ", ""));
+            mostrarResultadosC3("Método de Lagrange", polyStr, polyFn, puntos);
+        });
+        
+        // --- Implementación: Spline Lineal ---
+         document.getElementById('btn-spline-lineal').addEventListener('click', () => {
+            limpiarError('c3-mensaje-error');
+            const puntos = getPuntosC3();
+            if (!puntos) return;
+            
+            // Ordenar puntos por x para los splines
+            puntos.sort((a, b) => a.x - b.x);
+            
+            let splinesStr = "";
+            let polyData = []; // Para la gráfica
+
+            for (let i = 0; i < puntos.length - 1; i++) {
+                const p1 = puntos[i];
+                const p2 = puntos[i+1];
+                
+                const m = (p2.y - p1.y) / (p2.x - p1.x);
+                const b = p1.y - m * p1.x; // S(x) = mx + b
+                
+                splinesStr += `S_${i}(x) = ${m.toFixed(4)}*x + ${b.toFixed(4)}  (para x en [${p1.x}, ${p2.x}])<br>`;
+                
+                // Añadir los puntos del segmento a la gráfica
+                polyData.push({x: p1.x, y: p1.y});
+                polyData.push({x: p2.x, y: p2.y});
+            }
+
+            // Mostrar resultados
+            const resultadosDiv = document.getElementById('c3-resultados');
+            resultadosDiv.innerHTML = `
+                <h4 class="text-xl font-semibold mb-3">Splines Lineales</h4>
+                <div class="font-mono text-sm bg-gray-100 p-3 rounded overflow-x-auto">${splinesStr}</div>
+            `;
+            
+            // Actualizar gráfica
+            if (!window.c3Chart) initCap3Chart();
+            window.c3Chart.data.datasets[0].data = puntos; // Puntos originales
+            window.c3Chart.data.datasets[1].data = polyData; // Segmentos de línea
+            window.c3Chart.update();
+        });
+
+
+        // ======================================================
+        // ============== INICIALIZACIÓN AL CARGAR ================
+        // ======================================================
+        
+        // Inicializar la primera pestaña al cargar la página
+        window.onload = () => {
+            initCap1Chart();
+            // Disparar un clic en el botón de generar matriz para C2
+            document.getElementById('btn-generar-matriz').click();
+            initCap3Chart();
+
+            // Ocultar todas menos la primera
+            document.querySelectorAll('.tab-content').forEach((el, index) => {
+                if (index > 0) el.classList.remove('active');
+            });
+        };
+
+    </script>
+
+</body>
+</html>
