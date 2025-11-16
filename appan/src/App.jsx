@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-// Importar Chart.js y react-chartjs-2
+
 import { Scatter } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -11,14 +11,9 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-// Importar math.js
-// --- NOTA DE CORRECCIÓN ---
-// El error "Could not resolve 'mathjs'" significa que la librería no está instalada.
-// Por favor, ejecuta "npm install mathjs" en tu terminal para solucionarlo.
 import * as math from 'mathjs';
-// --- FIN DE CORRECCIÓN ---
 
-// Registrar componentes de Chart.js
+//Registrar componentes de Chart.js
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -29,8 +24,7 @@ ChartJS.register(
   Legend
 );
 
-// URL de la API de Python (Flask)
-// Asegúrate de que tu servidor Python esté corriendo en este puerto
+//URL de la API de Python (Flask)
 const API_URL = 'http://127.0.0.1:5000/api';
 
 // --- Componente de Tabla Genérico ---
@@ -61,7 +55,7 @@ const ResultsTable = ({ data }) => {
   );
 };
 
-// --- Componente de Gráfica Cap. 1 ---
+//Gráficas Cap. 1
 const Cap1Chart = ({ fnString, root }) => {
   const [chartData, setChartData] = useState({ datasets: [] });
 
@@ -72,21 +66,21 @@ const Cap1Chart = ({ fnString, root }) => {
     try {
       fn = math.parse(fnString).compile();
     } catch (e) {
-      // Error silencioso mientras se escribe
+      
       return;
     }
 
     const data = [];
-    // Definir un rango alrededor de la raíz o el origen
+    //Definir un rango alrededor de la raíz o el origen
     const rangeCenter = (root !== null && root !== undefined) ? root : 0;
     const rangeMin = rangeCenter - 5;
     const rangeMax = rangeCenter + 5;
-    const step = 0.2; // Paso para la gráfica
+    const step = 0.2; //Paso para la gráfica
 
     for (let x = rangeMin; x <= rangeMax; x += step) {
       try {
         const y = fn.evaluate({ x: x });
-        // Verificar que sea un número real finito
+        //Verificar que sea un número real finito
         if (typeof y === 'number' && isFinite(y)) {
              data.push({ x: x, y: y });
         }
@@ -108,18 +102,18 @@ const Cap1Chart = ({ fnString, root }) => {
         {
           label: 'f(x)',
           data: data,
-          borderColor: '#3b82f6', // Azul
+          borderColor: '#3b82f6', //Azul
           borderWidth: 2,
-          tension: 0.4, // Curvatura suave
+          tension: 0.4, //Curvatura suave
           showLine: true,
           type: 'line',
-          pointRadius: 0, // Ocultar puntos de la línea
+          pointRadius: 0, //Ocultar puntos de la línea
           pointHoverRadius: 0
         },
         {
           label: 'Raíz',
           data: rootData,
-          backgroundColor: '#ef4444', // Rojo
+          backgroundColor: '#ef4444', //Rojo
           borderColor: '#ef4444',
           type: 'scatter',
           pointRadius: 6,
@@ -147,12 +141,12 @@ const Cap1Chart = ({ fnString, root }) => {
   );
 };
 
-// --- Componente Principal ---
+//Componente Principal
 export default function App() {
   const [activeTab, setActiveTab] = useState('cap1');
   const [loading, setLoading] = useState(false);
   
-  // --- Estados Cap 1 ---
+  //Estados Cap 1 
   const [c1Fn, setC1Fn] = useState('x^3 - x - 2');
   const [c1a, setC1a] = useState('1');
   const [c1b, setC1b] = useState('2');
@@ -165,9 +159,9 @@ export default function App() {
   const [c1Error, setC1Error] = useState(null);
   const [c1Derivada, setC1Derivada] = useState('');
 
-  // --- Estados Cap 2 ---
+  //Estados Cap 2 
   const [c2Tamano, setC2Tamano] = useState(3);
-  // Inicializar matriz 3x3 por defecto
+  //Inicializar matriz 3x3 por defecto
   const [c2Matrix, setC2Matrix] = useState([['4', '1', '-1'], ['2', '7', '1'], ['1', '-3', '12']]);
   const [c2Vector, setC2Vector] = useState(['3', '19', '31']);
   const [c2Tol, setC2Tol] = useState('0.00001');
@@ -176,7 +170,7 @@ export default function App() {
   const [c2Result, setC2Result] = useState(null);
   const [c2Error, setC2Error] = useState(null);
   
-  // --- Estados Cap 3 ---
+  //Estados Cap 3 
   const [c3Puntos, setC3Puntos] = useState([{x: '0', y: '1'}, {x: '1', y: '3'}, {x: '2', y: '2'}]);
   const [c3Result, setC3Result] = useState(null);
   const [c3Error, setC3Error] = useState(null);
