@@ -27,7 +27,7 @@ ChartJS.register(
 //URL de la API de Python (Flask)
 const API_URL = 'http://127.0.0.1:5000/api';
 
-// --- Componente de Tabla Genérico ---
+//Componente de Tabla Genérico
 const ResultsTable = ({ data }) => {
   if (!data || data.length === 0) {
     return <p className="text-gray-500 italic">No hay datos en la tabla.</p>;
@@ -175,7 +175,7 @@ export default function App() {
   const [c3Result, setC3Result] = useState(null);
   const [c3Error, setC3Error] = useState(null);
 
-  // --- Componente de Botón de Pestaña ---
+  //Componente de Botón de Pestaña 
   const TabButton = ({ id, label }) => (
     <button
       className={`py-2 px-5 font-semibold text-sm rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300 ${
@@ -188,8 +188,7 @@ export default function App() {
       {label}
     </button>
   );
-
-  // --- Lógica para Cap 2 (Matrices) ---
+  //Lógica para Cap 2 (Matrices)
   const handleMatrixSizeChange = (e) => {
     const val = e.target.value;
     const N = parseInt(val, 10);
@@ -197,7 +196,7 @@ export default function App() {
     if (isNaN(N) || N < 2 || N > 7) return;
     
     setC2Tamano(N);
-    // Crear nueva matriz vacía del tamaño seleccionado
+    //Crear nueva matriz vacía del tamaño seleccionado
     const newMatrix = Array(N).fill(0).map(() => Array(N).fill('0'));
     const newVector = Array(N).fill('0');
     setC2Matrix(newMatrix);
@@ -205,7 +204,7 @@ export default function App() {
   };
   
   const handleMatrixChange = (val, i, j) => {
-    const newMatrix = c2Matrix.map(row => [...row]); // Copia profunda simple
+    const newMatrix = c2Matrix.map(row => [...row]); //Copia profunda simple
     newMatrix[i][j] = val;
     setC2Matrix(newMatrix);
   };
@@ -216,7 +215,7 @@ export default function App() {
     setC2Vector(newVector);
   };
   
-  // --- Lógica para Cap 3 (Puntos) ---
+  //Lógica para Cap 3 (Puntos)
     const handlePointChange = (val, i, field) => {
         const newPuntos = c3Puntos.map((p, idx) => {
             if (idx === i) return { ...p, [field]: val };
@@ -231,10 +230,10 @@ export default function App() {
         if(c3Puntos.length > 2) setC3Puntos(c3Puntos.slice(0, -1));
     };
 
-  // --- Manejador Central de API ---
+  //Manejador Central de API
   const handleApiCall = async (endpoint, body, setResult, setError) => {
     setLoading(true);
-    // Limpiar resultados y errores específicos del capítulo
+    //Limpiar resultados y errores específicos del capítulo
     if (setError === setC1Error) { setC1Result(null); setC1Error(null); }
     if (setError === setC2Error) { setC2Result(null); setC2Error(null); }
     if (setError === setC3Error) { setC3Result(null); setC3Error(null); }
@@ -253,7 +252,7 @@ export default function App() {
       }
       
       setResult(data);
-      // Si es Newton, guardar la derivada que devuelve el backend
+      //Si es Newton, guardar la derivada que devuelve el backend
       if(endpoint === 'newton') setC1Derivada(data.derivada || '');
 
     } catch (err) {
@@ -264,7 +263,7 @@ export default function App() {
     }
   };
 
-  // --- Wrappers para las llamadas ---
+  //Wrappers para las llamadas
   const runBiseccion = () => {
     handleApiCall('biseccion', 
       { fnString: c1Fn, a: c1a, b: c1b, tol: c1Tol, maxIter: c1Iter },
@@ -301,11 +300,11 @@ export default function App() {
   };
   
   const runJacobi = () => {
-    // Convertir strings a números para enviar
+    //Convertir strings a números para enviar
     const A = c2Matrix.map(row => row.map(val => parseFloat(val)));
     const b = c2Vector.map(val => parseFloat(val));
     
-    // Validación simple
+    //Validación simple
     if (A.flat().some(isNaN) || b.some(isNaN)) {
         setC2Error("Por favor, asegúrate de que todos los campos de la matriz y el vector sean números.");
         return;
@@ -378,7 +377,7 @@ export default function App() {
     handleApiCall('spline_lineal', { puntos }, setC3Result, setC3Error);
   };
 
-  // --- Botón de Acción Genérico ---
+  //Botón de Acción Genérico 
   const ActionButton = ({ onClick, loading, children, className }) => (
     <button
       onClick={onClick}
