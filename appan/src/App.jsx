@@ -754,7 +754,7 @@ export default function App() {
 
                       /* Si no hay ningún resultado, mostrar el placeholder */
                       ) : (
-                          !c3Error && ( // Ocultar si hay un error
+                          !c3Error && ( //Ocultar si hay un error
                             <div className="h-full flex flex-col items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 rounded-lg p-10">
                                 <p className="text-center text-lg">Ingresa puntos y calcula para ver el resultado</p>
                             </div>
